@@ -1,0 +1,113 @@
+rules:
+  - id: "no-direct-transcript-message-emits-from-plugins"
+    name: "Do not expose plugin APIs that emit synthetic transcript messages"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Plugin-facing runtime events must not allow emitting message-bearing transcript updates directly. Only allow wrappers that emit after transcript persistence (or append-and-emit helpers) so UI messages cannot appear without durable transcript writes."
+    llm:
+      prompt: "Plugin-facing runtime events must not allow emitting message-bearing transcript updates directly. Only allow wrappers that emit after transcript persistence (or append-and-emit helpers) so UI messages cannot appear without durable transcript writes."
+  - id: "require-scopes-on-plugin-actions-and-ui-descriptors"
+    name: "Require explicit operator scopes on privileged plugin actions and UI descriptors"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Session actions, approval flows, and control UI descriptors must declare valid required scopes; reject missing, malformed, or unknown scopes at registration time."
+    llm:
+      prompt: "Session actions, approval flows, and control UI descriptors must declare valid required scopes; reject missing, malformed, or unknown scopes at registration time."
+  - id: "enforce-plugin-stream-namespace-for-emitted-events"
+    name: "Restrict plugin-emitted agent events to plugin-owned stream namespaces"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Plugin event emission must be limited to plugin-owned streams (for example plugin-prefixed streams) and must not publish to host-owned lifecycle/tool/approval streams."
+    llm:
+      prompt: "Plugin event emission must be limited to plugin-owned streams (for example plugin-prefixed streams) and must not publish to host-owned lifecycle/tool/approval streams."
+  - id: "gate-plugin-side-effects-on-active-live-registry"
+    name: "Block plugin side effects unless registry is active and live"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "APIs that emit events, schedule turns, send attachments, or mutate run context must verify the calling registry/plugin is currently active/live (not stale, retired, disabled, or snapshot-only with global side effects off)."
+    llm:
+      prompt: "APIs that emit events, schedule turns, send attachments, or mutate run context must verify the calling registry/plugin is currently active/live (not stale, retired, disabled, or snapshot-only with global side effects off)."
+  - id: "use-runtime-scoped-config-for-session-state-and-delivery"
+    name: "Use live run-scoped config for plugin session reads and outbound delivery"
+    type: llm
+    severity: warning
+    category: "patterns"
+    message: "Session-extension reads, trusted-policy contexts, and attachment/delivery flows must use the current runtime or caller-scoped config, not stale registration/global fallback config, so custom stores and per-run state resolve correctly."
+    llm:
+      prompt: "Session-extension reads, trusted-policy contexts, and attachment/delivery flows must use the current runtime or caller-scoped config, not stale registration/global fallback config, so custom stores and per-run state resolve correctly."
+  - id: "validate-plugin-inputs-and-results-as-json-safe-shapes"
+    name: "Validate plugin API inputs and outputs with strict JSON-safe guards"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Plugin-provided params/results (session action replies/details, attachment entries, policy decision params, persisted extension values) must be runtime-validated as plain JSON-compatible objects/values; reject malformed types instead of throwing or coercing."
+    llm:
+      prompt: "Plugin-provided params/results (session action replies/details, attachment entries, policy decision params, persisted extension values) must be runtime-validated as plain JSON-compatible objects/values; reject malformed types instead of throwing or coercing."
+  - id: "harden-attachment-delivery-and-mime-validation"
+    name: "Harden attachment handling before outbound send"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Attachment paths must reject symlinks and invalid entries, enforce file-count and byte caps, sniff MIME from bounded file bytes (not full-file reads or extension-only hints), and fail closed on gateway-mode/non-direct channels before any host-local path is handed to delivery."
+    llm:
+      prompt: "Attachment paths must reject symlinks and invalid entries, enforce file-count and byte caps, sniff MIME from bounded file bytes (not full-file reads or extension-only hints), and fail closed on gateway-mode/non-direct channels before any host-local path is handed to delivery."
+  - id: "normalize-and-trim-optional-plugin-fields-before-use"
+    name: "Normalize optional string fields before lookup or emission"
+    type: llm
+    severity: warning
+    category: "style"
+    message: "Optional identifiers such as sessionKey, namespace, thread hints, and retry instructions must be type-checked and trimmed consistently before cache lookups, map keys, or emitted payloads to avoid bypasses and orphaned state."
+    llm:
+      prompt: "Optional identifiers such as sessionKey, namespace, thread hints, and retry instructions must be type-checked and trimmed consistently before cache lookups, map keys, or emitted payloads to avoid bypasses and orphaned state."
+  - id: "make-derived-policy-metadata-immutable-and-non-authoritative"
+    name: "Treat derived policy metadata as immutable hints only"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Derived fields like derivedPaths must be defensively copied/frozen per evaluation and derivers must not override core event fields; plugins should not treat derived metadata as authoritative parsed truth for correctness-critical decisions."
+    llm:
+      prompt: "Derived fields like derivedPaths must be defensively copied/frozen per evaluation and derivers must not override core event fields; plugins should not treat derived metadata as authoritative parsed truth for correctness-critical decisions."
+  - id: "enforce-cron-contract-and-safe-scheduler-semantics"
+    name: "Enforce cron payload contract and robust scheduler behavior"
+    type: llm
+    severity: warning
+    category: "patterns"
+    message: "Scheduled-turn APIs must emit only cron-supported delivery modes/payload fields, include required cron fields, use stable pagination sort during cleanup scans, validate delay/time bounds, and handle cleanup/rollback idempotently without orphaning jobs or unhandled rejections."
+    llm:
+      prompt: "Scheduled-turn APIs must emit only cron-supported delivery modes/payload fields, include required cron fields, use stable pagination sort during cleanup scans, validate delay/time bounds, and handle cleanup/rollback idempotently without orphaning jobs or unhandled rejections."
+  - id: "preserve-global-next-turn-order-and-filter-stale-plugin-queues"
+    name: "Drain next-turn injections in global enqueue order and ignore stale owners"
+    type: llm
+    severity: warning
+    category: "patterns"
+    message: "Queued next-turn injections must tolerate malformed persisted shapes, sort by createdAt across plugins, filter to currently loaded plugins, and still clear stale persisted entries so disabled plugins cannot influence later prompts."
+    llm:
+      prompt: "Queued next-turn injections must tolerate malformed persisted shapes, sort by createdAt across plugins, filter to currently loaded plugins, and still clear stale persisted entries so disabled plugins cannot influence later prompts."
+  - id: "require-unique-sessionentry-slot-ownership"
+    name: "Require unique SessionEntry slot ownership across plugins"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Session extension registrations must enforce unique sessionEntrySlotKey ownership and reject duplicates so projected top-level SessionEntry mirrors cannot overwrite each other."
+    llm:
+      prompt: "Session extension registrations must enforce unique sessionEntrySlotKey ownership and reject duplicates so projected top-level SessionEntry mirrors cannot overwrite each other."
+  - id: "bound-run-context-cleanup-and-catch-handler-failures"
+    name: "Keep terminal cleanup host-bounded and resilient to handler failures"
+    type: llm
+    severity: warning
+    category: "patterns"
+    message: "Terminal/run-context cleanup must wait only for bounded host-controlled windows, track live pending-handler sets (including late additions), and catch sync/async subscription failures so cleanup still completes without context resurrection."
+    llm:
+      prompt: "Terminal/run-context cleanup must wait only for bounded host-controlled windows, track live pending-handler sets (including late additions), and catch sync/async subscription failures so cleanup still completes without context resurrection."
+  - id: "validate-command-registration-ownership-and-aliases"
+    name: "Validate command registration names, ownership, and aliases strictly"
+    type: llm
+    severity: warning
+    category: "security"
+    message: "Command registration must reject malformed requiredScopes, enforce reserved-name ownership rules, and apply strict reserved-name validation to aliases (without reserved-name bypasses intended only for primary bundled command names)."
+    llm:
+      prompt: "Command registration must reject malformed requiredScopes, enforce reserved-name ownership rules, and apply strict reserved-name validation to aliases (without reserved-name bypasses intended only for primary bundled command names)."
